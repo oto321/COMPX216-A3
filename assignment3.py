@@ -10,19 +10,88 @@ def build_unigram(sequence):
     # Task 1.1
     # Return a unigram model.
     # Replace the line below with your code.
-    raise NotImplementedError
+
+    # create a dictionary which will act as the value
+    inner_dictionary = {}
+
+    # calculate number of times each item shows up in sequence
+    for item in sequence:
+        if item not in inner_dictionary:
+            # if the item does not exist in the inner dictionary add it and set frequency to 1
+            inner_dictionary[item] = 1
+        else:
+            # otherwise item exists in the dictionary and add one to frequency
+            inner_dictionary[item] += 1
+                
+    
+    return {(): inner_dictionary}
 
 def build_bigram(sequence):
     # Task 1.2
     # Return a bigram model.
     # Replace the line below with your code.
-    raise NotImplementedError
+
+    # create a dictionary to hold values
+    return_dictionary = {}
+
+    # cycle through each item in sequency minus 1
+    for i in range(len(sequence) - 1):
+        # store the current item
+        curr_item = (sequence[i],)
+
+
+        # store the next item
+        next_item = sequence[i + 1]
+
+        # check to see if the item is not in the dictionary
+        if curr_item not in return_dictionary:
+            # add item to the dictionary
+            return_dictionary[curr_item] = {}
+        
+        # if the next item has not already appeared add it to the current item's value
+        if next_item not in return_dictionary[curr_item]:
+            # add next item to current item's value and set frequency to 1
+            return_dictionary[curr_item][next_item] = 1
+        else:
+            # otherwise add one to the frequency of the next item
+            return_dictionary[curr_item][next_item] += 1
+    
+    # return the dictionary
+    return return_dictionary 
+
 
 def build_n_gram(sequence, n):
     # Task 1.3
     # Return an n-gram model.
     # Replace the line below with your code.
-    raise NotImplementedError
+
+    # create the dictionary that will be returned
+    return_dictionary = {}
+
+    # for each item in sequence minus n plus one
+    for i in range(len(sequence) - n + 1):
+        # get the current items
+        curr_items = tuple(sequence[i:i+n-1])
+
+        # get the next item
+        next_item = sequence[i + n - 1]
+        
+        # check to see if the current item is not in the dictionary
+        if curr_items not in return_dictionary:
+            # add it to the dictionary
+            return_dictionary[curr_items] = {}
+        
+        # if the next item has not already appeared add it to the current item's value
+        if next_item not in return_dictionary[curr_items]:
+            # add next item to current item's value and set frequency to 1
+            return_dictionary[curr_items][next_item] = 1
+        else:
+            # otherwise add one to the frequency of the next item
+            return_dictionary[curr_items][next_item] += 1
+
+    # return the dictionary
+    return return_dictionary
+
 
 def query_n_gram(model, sequence):
     # Task 2
@@ -78,22 +147,25 @@ if __name__ == '__main__':
     sequence = tokenise('assignment3corpus.txt')
 
     # Task 1.1 test code
-    '''
+    
+    print("task 1.1")
     model = build_unigram(sequence[:20])
     print(model)
-    '''
+
 
     # Task 1.2 test code
-    '''
+    
+    print("task 1.2")
     model = build_bigram(sequence[:20])
     print(model)
-    '''
+    
 
     # Task 1.3 test code
-    '''
+
+    print("task 1.3")
     model = build_n_gram(sequence[:20], 5)
     print(model)
-    '''
+    
 
     # Task 2 test code
     '''
