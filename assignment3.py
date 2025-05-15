@@ -3,7 +3,7 @@ import math
 import random
 
 def tokenise(filename):
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf-8-sig') as f:
         return [i for i in re.split(r'(\d|\W)', f.read().replace('_', ' ').lower()) if i and i != ' ' and i != '\n']
 
 def build_unigram(sequence):
@@ -71,7 +71,7 @@ def build_n_gram(sequence, n):
     # for each item in sequence minus n plus one
     for i in range(len(sequence) - n + 1):
         # get the current items
-        curr_items = tuple(sequence[i:i+n-1])
+        curr_items = tuple  (sequence[i:i+n-1])
 
         # get the next item
         next_item = sequence[i + n - 1]
@@ -97,7 +97,12 @@ def query_n_gram(model, sequence):
     # Task 2
     # Return a prediction as a dictionary.
     # Replace the line below with your code.
-    raise NotImplementedError
+
+    # If it's a unigram model, return the dictionary at key ()
+    if () in model:
+        return model[()]
+    # For n-gram models where n >= 2
+    return model.get(sequence, None)
 
 def blended_probabilities(preds, factor=0.8):
     blended_probs = {}
@@ -128,19 +133,136 @@ def sample(sequence, models):
     # Task 3
     # Return a token sampled from blended predictions.
     # Replace the line below with your code.
-    raise NotImplementedError
+
+    # list to store predictins
+    predictions = []
+
+    # for each model in models
+    for model in models:
+        # get size of context in model
+        size = len(next(iter(model)))
+
+        # check to see if the sequence is long enough for the n gram
+        if len(sequence) >= size:
+            
+            # retrieve size number of last words from the sequence
+            value = tuple(sequence[-size: ])
+
+            # call query_n_gram to get all the possible next words
+            # and add it to the predictions list if it exists 
+            prediction = query_n_gram(model, value)
+            predictions.append(prediction) if prediction is not None else None 
+            
+
+    # use the blended_probabilities function
+    blended_predictions = blended_probabilities(predictions)
+
+    # return a random word from the blended_next_words
+    return random.choices(list(blended_predictions.keys()), weights=blended_predictions.values(), k=1)[0]
+
+
 
 def log_likelihood_ramp_up(sequence, models):
     # Task 4.1
     # Return a log likelihood value of the sequence based on the models.
     # Replace the line below with your code.
-    raise NotImplementedError
+
+    # store the total likelihood
+    total_likelihood = 0
+
+    # get the context size of the first model to figure out what the 
+    max_n_val = len(next(iter(models[0]))) + 1
+
+    # for each token in the sequence
+    for i, token in enumerate(sequence):
+
+        # determine what model to use
+        n_value = min(i, len(models) - 1)
+        
+        curr_model = models[-(n_value+1)]
+
+
+        # get the context
+        context = tuple(sequence[i - n_value : i])
+
+        # get a list of all the predictions using the current mode
+        predictions_list = query_n_gram(curr_model, context)
+
+        # check to see if the prediction exists
+        if predictions_list is None or token not in predictions_list:
+            return -math.inf
+
+        # get the frequency of the current token
+        curr_token_frequency = predictions_list[token]
+
+        # get the total number of predictions in the predictions list
+        predictions_total = sum(predictions_list.values())
+
+        # probability of the current token by normalizing the frequency of the current word
+        probability = curr_token_frequency/predictions_total
+
+        # get the log of it
+        log_probability = math.log(probability)
+
+        # add it to the total
+        total_likelihood += log_probability
+
+    return total_likelihood
+
+
+
+
 
 def log_likelihood_blended(sequence, models):
     # Task 4.2
     # Return a log likelihood value of the sequence based on the models.
     # Replace the line below with your code.
-    raise NotImplementedError
+    
+    total_score = 0
+
+    # for each token in the sequence
+    for i, token in enumerate(sequence):
+
+        # create a list to store the predictions
+        predictions = []
+
+        # for each model in the models
+        for model in models:
+
+            # get the size of the current model
+            curr_model_size = len(next(iter(model)))
+            
+            # check to see if the number of tokens before the current 
+            # token is more than or equal to the size of the current mode
+            if i >= curr_model_size:
+
+                # get the context
+                context = tuple(sequence[i - curr_model_size: i])
+
+                # get the prediction
+                prediction = query_n_gram(model, context)
+
+                # add the prediction to predictions if it is not none
+                predictions.append(prediction) if prediction is not None else None 
+
+        # if there are no predictions return inf
+        if not predictions:
+            return -math.inf
+
+
+        blended = blended_probabilities(predictions)
+
+        # If token not found in blended predictions, prob is 0
+        if token not in blended or blended[token] == 0:
+            return -math.inf
+
+        # Add log probability to total
+        total_score += math.log(blended[token])
+
+    return total_score
+
+    
+
 
 if __name__ == '__main__':
 
@@ -168,12 +290,14 @@ if __name__ == '__main__':
     
 
     # Task 2 test code
-    '''
+    
+    print("task 2")
     print(query_n_gram(model, tuple(sequence[:4])))
-    '''
+    
 
     # Task 3 test code
-    '''
+    
+    print("task 3")
     models = [build_n_gram(sequence, i) for i in range(10, 0, -1)]
     head = []
     for _ in range(100):
@@ -181,15 +305,17 @@ if __name__ == '__main__':
         print(tail, end=' ')
         head.append(tail)
     print()
-    '''
+    
 
     # Task 4.1 test code
-    '''
+    
+    print("task 4.1")
     print(log_likelihood_ramp_up(sequence[:20], models))
-    '''
+    
 
     # Task 4.2 test code
-    '''
+    
+    print("task 4.2")
     print(log_likelihood_blended(sequence[:20], models))
-    '''
+    
 
